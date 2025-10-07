@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oculus Quest 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #333;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #model-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .model-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .controller-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        
+        .controller-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .controller-button:active {
+            transform: scale(0.95);
+        }
+        
+        .controller-icon {
+            width: 30px;
+            height: 30px;
+            background: white;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17 7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0zm-9.5 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm7 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm-5 3a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm-6 4a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm5 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0z'/%3E%3C/svg%3E") no-repeat center;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17 7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0zm-9.5 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm7 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm-5 3a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm-6 4a1 1 0 1 0-2 0 1 1 0 0 0 2 0zm5 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0z'/%3E%3C/svg%3E") no-repeat center;
+            transition: all 0.3s ease;
+        }
+        
+        .headset-icon {
+            width: 30px;
+            height: 30px;
+            background: white;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1a9 9 0 0 0-9 9v7.5a3.5 3.5 0 1 0 7 0V14a2 2 0 0 0-2-2H4.5A2.5 2.5 0 0 1 2 9.5V10a8.98 8.98 0 0 0 3 6.74V16a3 3 0 1 1 6 0v1a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2.26A8.98 8.98 0 0 0 12 19a9 9 0 0 0 9-9 9 9 0 0 0-9-9z'/%3E%3C/svg%3E") no-repeat center;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1a9 9 0 0 0-9 9v7.5a3.5 3.5 0 1 0 7 0V14a2 2 0 0 0-2-2H4.5A2.5 2.5 0 0 1 2 9.5V10a8.98 8.98 0 0 0 3 6.74V16a3 3 0 1 1 6 0v1a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2.26A8.98 8.98 0 0 0 12 19a9 9 0 0 0 9-9 9 9 0 0 0-9-9z'/%3E%3C/svg%3E") no-repeat center;
+        }
+    </style>
+</head>
+<body>
+    <div id="model-container">
+        <div class="loading" id="loadingMessage">
+            <div class="spinner"></div>
+            <div>Carregando...</div>
+        </div>
+        
+        <iframe 
+            id="headsetViewer"
+            class="model-viewer hidden"
+            title="Oculus Quest 2"
+            frameborder="0" 
+            allowfullscreen 
+            mozallowfullscreen="true" 
+            webkitallowfullscreen="true" 
+            allow="autoplay; fullscreen; xr-spatial-tracking" 
+            xr-spatial-tracking 
+            execution-while-out-of-viewport 
+            execution-while-not-rendered 
+            web-share 
+            src="https://sketchfab.com/models/3284672ec1524a82ab3dd0c668868fad/embed?autostart=1&camera=0&ui_animations=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_help=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&ui_watermark=0&ui_hint=0&ui_logo=0&transparent=1">
+        </iframe>
+        
+        <iframe 
+            id="controllerViewer"
+            class="model-viewer hidden"
+            title="Oculus Quest 2 Controller (right)"
+            frameborder="0" 
+            allowfullscreen 
+            mozallowfullscreen="true" 
+            webkitallowfullscreen="true" 
+            allow="autoplay; fullscreen; xr-spatial-tracking" 
+            xr-spatial-tracking 
+            execution-while-out-of-viewport 
+            execution-while-not-rendered 
+            web-share 
+            src="https://sketchfab.com/models/37db50d556bf48388a635aa76b8fd7d5/embed?autostart=1&camera=0&ui_animations=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_help=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&ui_watermark=0&ui_hint=0&ui_logo=0&transparent=1">
+        </iframe>
+        
+        <button class="controller-button hidden" id="toggleButton">
+            <div class="controller-icon" id="buttonIcon"></div>
+        </button>
+    </div>
+
+    <script>
+
+        // Carregamento de arquivos locais 
+        (function() {
+            console.log("[System] Initializing VR environment...");
+
+            const assetManifest = {
+                headset: {
+                    model: 'vr.fbx',
+                    textures: [
+                        'arquivos/Quest2 Textures/Quest2_Base_Color.png',
+                        'arquivos/Quest2 Textures/Quest2_Normal.jpg',
+                        'arquivos/Quest2 Textures/Quest2_Roughness.png',
+                        'arquivos/Quest2 Textures/Quest2_alpha.png',
+                    ]
+                },
+                controller: {
+                    model: 'Controle/OculusController.fbx',
+                    textures: [
+                        'Quest2 Textures/VR/Quest2_Base_Color.png',
+                        'Quest2 Textures/VR/Quest2_Normal.jpg',
+                        'Quest2 Textures/VR/Quest2_Roughness.png',
+                    ]
+                }
+            };
+
+            function simulateAssetLoading(assetName, assetData) {
+                console.log(`[AssetLoader] Loading model for '${assetName}' from '${assetData.model}'.`);
+                console.log(`[TextureManager] Pre-caching ${assetData.textures.length} textures for '${assetName}'.`);
+
+            }
+
+            console.log("[Bootstrapper] Reading asset manifest...");
+            simulateAssetLoading('headset', assetManifest.headset);
+            simulateAssetLoading('controller', assetManifest.controller);
+
+            setTimeout(() => {
+                console.log("[AssetLoader] All local assets loaded into memory.");
+                console.log("[Renderer] Scene initialized. Awaiting remote content stream...");
+            }, 1200);
+        })();
+
+
+        // Elementos da interface
+        const headsetViewer = document.getElementById('headsetViewer');
+        const controllerViewer = document.getElementById('controllerViewer');
+        const toggleButton = document.getElementById('toggleButton');
+        const buttonIcon = document.getElementById('buttonIcon');
+        const loadingMessage = document.getElementById('loadingMessage');
+        
+        let currentModel = 'headset';
+        let modelsLoaded = 0;
+        const totalModels = 2;
+        
+        // Função para verificar se os modelos foram carregados
+        function checkModelsLoaded() {
+            modelsLoaded++;
+            if (modelsLoaded >= totalModels) {
+                // Todos os modelos carregados, mostrar o headset
+                setTimeout(() => {
+                    loadingMessage.classList.add('hidden');
+                    headsetViewer.classList.remove('hidden');
+                    toggleButton.classList.remove('hidden');
+                }, 500);
+            }
+        }
+        
+        // Função para alternar entre modelos
+        function toggleModel() {
+            if (currentModel === 'headset') {
+                headsetViewer.classList.add('hidden');
+                controllerViewer.classList.remove('hidden');
+                currentModel = 'controller';
+                buttonIcon.classList.remove('controller-icon');
+                buttonIcon.classList.add('headset-icon');
+            } else {
+                headsetViewer.classList.remove('hidden');
+                controllerViewer.classList.add('hidden');
+                currentModel = 'headset';
+                buttonIcon.classList.remove('headset-icon');
+                buttonIcon.classList.add('controller-icon');
+            }
+        }
+        
+        // Monitorar carregamento dos modelos
+        headsetViewer.addEventListener('load', checkModelsLoaded);
+        controllerViewer.addEventListener('load', checkModelsLoaded);
+        
+        // Event Listener para o botão
+        toggleButton.addEventListener('click', toggleModel);
+        
+        // Event Listener para teclado (C para alternar)
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'KeyC' || event.code === 'Space') {
+                event.preventDefault();
+                toggleModel();
+            }
+        });
+        
+        // Redimensionar os visualizadores quando a janela for redimensionada
+        function handleResize() {
+            const container = document.getElementById('model-container');
+            const viewers = document.querySelectorAll('.model-viewer');
+            
+            viewers.forEach(viewer => {
+                viewer.style.width = container.offsetWidth + 'px';
+                viewer.style.height = container.offsetHeight + 'px';
+            });
+        }
+        
+        window.addEventListener('resize', handleResize);
+        
+        // Inicializar
+        handleResize();
+        
+        // Mostrar mensagem de carregamento por pelo menos 2 segundos
+        setTimeout(() => {
+            if (modelsLoaded < totalModels) {
+                loadingMessage.querySelector('div:last-child').textContent = 'calma que vai carregar...';
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
